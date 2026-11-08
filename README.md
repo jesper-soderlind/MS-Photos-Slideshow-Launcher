@@ -34,10 +34,11 @@ Produces `dist\PhotosSlideshow.exe` (~22 MB, single file) and
 
 ```
 PhotosSlideshow.exe "C:\path\to\folder"            slideshow of a folder (top level)
+PhotosSlideshow.exe "C:\a.jpg" "C:\b.png"          individual files / multiple sources
+PhotosSlideshow.exe "C:\pics" "D:\more" -r        folders can be combined too
 PhotosSlideshow.exe "C:\path\to\folder" -r         recurse into subfolders
 PhotosSlideshow.exe "C:\path\to\folder" -s         shuffle playback order
 PhotosSlideshow.exe "C:\path\to\folder" --windowed start windowed, not fullscreen
-PhotosSlideshow.exe --files "C:\a.jpg;C:\b.png"    explicit file list
 PhotosSlideshow.exe --duration 15000                persist duration (ms), no launch
 PhotosSlideshow.exe --shuffle                       persist shuffle=1, no launch
 PhotosSlideshow.exe --recursive                     persist recursion=1, no launch
@@ -49,7 +50,7 @@ PhotosSlideshow.exe "C:\folder" --duration 8000     8 s/image for this launch on
 ### Persisting vs per-launch settings
 
 `--shuffle`, `--recursive`, and `--duration` persist to `settings.ini` **only
-when no folder/files are passed**. Combined with a launch, they override the
+when no files/folders are passed**. Combined with a launch, they override the
 saved values for that run only. So `"C:\pics" --duration 20000` plays once at
 20 s/image, while `--duration 20000` alone makes it the new default.
 

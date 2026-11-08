@@ -11,8 +11,8 @@ namespace PhotosSlideshow;
 /// duration setting (and any other runtime patches) is applied.
 ///
 /// Usage:
-///   PhotosSlideshow.exe "C:\path\to\folder" [-r|--recursive] [-s|--shuffle] [--windowed] [--duration <ms>]
-///   PhotosSlideshow.exe --files "C:\a.jpg;C:\b.png" [same flags]
+///   PhotosSlideshow.exe "C:\pics" ["C:\more\pics" ...] [-r|--recursive] [-s|--shuffle] [--windowed] [--duration <ms>]
+///   PhotosSlideshow.exe "C:\a.jpg" "C:\b.png" ...   # individual files also work
 ///   PhotosSlideshow.exe --duration <ms> | --shuffle | --recursive   # persist setting without launching
 /// </summary>
 public static class Program
@@ -45,8 +45,8 @@ public static class Program
         bool shuffleArg = false;
         bool windowed = false;
         int? durationMs = null;
-        string? folder = null;
-        string? fileList = null;
+        var folders = new List<string>();
+        var explicitFiles = new List<string>();
 
         var positional = new List<string>();
         for (int i = 0; i < args.Length; i++)
@@ -62,21 +62,19 @@ public static class Program
                 if (i + 1 < args.Length && int.TryParse(args[++i], out int d)) durationMs = d;
                 continue;
             }
-            if (a.Equals("--files", StringComparison.OrdinalIgnoreCase))
-            {
-                if (i + 1 < args.Length) fileList = args[++i];
-                continue;
-            }
             positional.Add(a);
         }
 
+        // Every positional arg is a source: existing directories are
+        // enumerated for media, existing files are used directly.
         foreach (var p in positional)
         {
-            if (Directory.Exists(p)) folder = p;
-            else if (File.Exists(p)) fileList = p;
+            if (Directory.Exists(p)) folders.Add(p);
+            else if (File.Exists(p)) explicitFiles.Add(Path.GetFullPath(p));
+            else Console.Error.WriteLine($"Warning: '{p}' is not a file or folder; ignored.");
         }
 
-        bool launching = folder != null || fileList != null;
+        bool launching = folders.Count > 0 || explicitFiles.Count > 0;
 
         // --shuffle / --recursive / --duration persist to settings.ini only
         // when NOT launching a slideshow; with a folder/files they apply to
@@ -115,24 +113,22 @@ public static class Program
         }
 
         List<string> files;
-        if (fileList != null)
-        {
-            files = fileList.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                            .Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        }
-        else if (folder != null)
-        {
-            files = EnumerateMediaFiles(folder, recursive);
-        }
-        else
+        if (!launching)
         {
             if (durationMs.GetValueOrDefault() > 0 || shuffleArg || recursiveArg)
                 return 0; // settings-only run; values already persisted above
-            Console.Error.WriteLine("Usage: PhotosSlideshow.exe \"<folder>\" [-r|--recursive] [-s|--shuffle] [--windowed] [--duration <ms>]");
-            Console.Error.WriteLine("       PhotosSlideshow.exe --files \"C:\\a.jpg;C:\\b.png\" [-s|--shuffle] [--windowed] [--duration <ms>]");
+            Console.Error.WriteLine("Usage: PhotosSlideshow.exe \"<folder or file>\" [more files/folders...] [-r|--recursive] [-s|--shuffle] [--windowed] [--duration <ms>]");
             Console.Error.WriteLine("       PhotosSlideshow.exe --duration <ms> | --shuffle | --recursive   # persist setting without launching");
             return 2;
         }
+
+        // explicit files are used as-is; folder results are already
+        // extension-filtered inside EnumerateMediaFiles
+        files = explicitFiles
+            .Concat(folders.SelectMany(f => EnumerateMediaFiles(f, recursive)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        files.Sort(StringComparer.OrdinalIgnoreCase);
 
         if (files.Count == 0)
         {

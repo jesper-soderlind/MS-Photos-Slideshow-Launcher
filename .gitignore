@@ -1,0 +1,17 @@
+# Build output
+bin/
+obj/
+publish/
+dist/
+*.obj
+PhotosSlideshowHook/PhotosSlideshowHook.dll
+
+# Reverse-engineering scratch (not needed to build)
+analysis/
+
+# Personal test scripts
+test*.bat
+
+# User/machine files
+*.user
+*.log

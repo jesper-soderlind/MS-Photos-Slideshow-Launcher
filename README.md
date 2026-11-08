@@ -40,6 +40,7 @@ PhotosSlideshow.exe "C:\path\to\folder" --windowed start windowed, not fullscree
 PhotosSlideshow.exe --files "C:\a.jpg;C:\b.png"    explicit file list
 PhotosSlideshow.exe --duration 15000                persist duration (ms), no launch
 PhotosSlideshow.exe --shuffle                       persist shuffle=1, no launch
+PhotosSlideshow.exe --recursive                     persist recursion=1, no launch
 PhotosSlideshow.exe "C:\folder" --duration 8000     8 s/image for this launch only
 ```
 
@@ -47,9 +48,9 @@ PhotosSlideshow.exe "C:\folder" --duration 8000     8 s/image for this launch on
 
 ### Persisting vs per-launch settings
 
-`--shuffle` and `--duration` persist to `settings.ini` **only when no
-folder/files are passed**. Combined with a launch, they override the saved
-values for that run only. So `"C:\pics" --duration 20000` plays once at
+`--shuffle`, `--recursive`, and `--duration` persist to `settings.ini` **only
+when no folder/files are passed**. Combined with a launch, they override the
+saved values for that run only. So `"C:\pics" --duration 20000` plays once at
 20 s/image, while `--duration 20000` alone makes it the new default.
 
 ## Configuration
@@ -60,6 +61,7 @@ values for that run only. So `"C:\pics" --duration 20000` plays once at
 [Slideshow]
 DurationMs=5000
 Shuffle=0
+Recursive=0
 Loop=1
 Animations=1
 Transitions=1
@@ -68,6 +70,8 @@ Transitions=1
 - `DurationMs` - ms per image, any positive value (default 5000)
 - `Shuffle` - `1`/`0` (default `0`); shuffles the file list. No `--no-shuffle`
   flag - edit the ini to disable.
+- `Recursive` - `1`/`0` (default `0`); folder launches include subfolders.
+  Like `Shuffle`, there's no per-launch "off" flag - edit the ini to disable.
 - `Loop`, `Animations`, `Transitions` - optional; absent = Photos default.
   Written automatically when toggled in the slideshow viewer.
 

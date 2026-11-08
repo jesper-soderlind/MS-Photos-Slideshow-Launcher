@@ -13,7 +13,7 @@ namespace PhotosSlideshow;
 /// Usage:
 ///   PhotosSlideshow.exe "C:\path\to\folder" [-r|--recursive] [-s|--shuffle] [--windowed] [--duration <ms>]
 ///   PhotosSlideshow.exe --files "C:\a.jpg;C:\b.png" [same flags]
-///   PhotosSlideshow.exe --duration <ms> | --shuffle   # persist setting without launching
+///   PhotosSlideshow.exe --duration <ms> | --shuffle | --recursive   # persist setting without launching
 /// </summary>
 public static class Program
 {
@@ -41,7 +41,7 @@ public static class Program
         try { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "hook.log"), ""); }
         catch { }
 
-        bool recursive = false;
+        bool recursiveArg = false;
         bool shuffleArg = false;
         bool windowed = false;
         int? durationMs = null;
@@ -53,7 +53,7 @@ public static class Program
         {
             var a = args[i];
             if (a.Equals("-r", StringComparison.OrdinalIgnoreCase) ||
-                a.Equals("--recursive", StringComparison.OrdinalIgnoreCase)) { recursive = true; continue; }
+                a.Equals("--recursive", StringComparison.OrdinalIgnoreCase)) { recursiveArg = true; continue; }
             if (a.Equals("-s", StringComparison.OrdinalIgnoreCase) ||
                 a.Equals("--shuffle", StringComparison.OrdinalIgnoreCase)) { shuffleArg = true; continue; }
             if (a.Equals("--windowed", StringComparison.OrdinalIgnoreCase)) { windowed = true; continue; }
@@ -78,14 +78,22 @@ public static class Program
 
         bool launching = folder != null || fileList != null;
 
-        // --shuffle / --duration persist to settings.ini only when NOT
-        // launching a slideshow; with a folder/files they apply to this run only.
+        // --shuffle / --recursive / --duration persist to settings.ini only
+        // when NOT launching a slideshow; with a folder/files they apply to
+        // this run only.
         if (shuffleArg && !launching)
         {
             WriteSetting("Shuffle", "1");
             Console.WriteLine("Shuffle enabled (persisted).");
         }
         bool shuffle = launching && (shuffleArg || ReadSettingBool("Shuffle"));
+
+        if (recursiveArg && !launching)
+        {
+            WriteSetting("Recursive", "1");
+            Console.WriteLine("Recursive enabled (persisted).");
+        }
+        bool recursive = launching && (recursiveArg || ReadSettingBool("Recursive"));
 
         int? sessionDurationMs = null;
         if (durationMs.HasValue)
@@ -118,11 +126,11 @@ public static class Program
         }
         else
         {
-            if (durationMs.GetValueOrDefault() > 0 || shuffleArg)
+            if (durationMs.GetValueOrDefault() > 0 || shuffleArg || recursiveArg)
                 return 0; // settings-only run; values already persisted above
             Console.Error.WriteLine("Usage: PhotosSlideshow.exe \"<folder>\" [-r|--recursive] [-s|--shuffle] [--windowed] [--duration <ms>]");
             Console.Error.WriteLine("       PhotosSlideshow.exe --files \"C:\\a.jpg;C:\\b.png\" [-s|--shuffle] [--windowed] [--duration <ms>]");
-            Console.Error.WriteLine("       PhotosSlideshow.exe --duration <ms> | --shuffle   # persist setting without launching");
+            Console.Error.WriteLine("       PhotosSlideshow.exe --duration <ms> | --shuffle | --recursive   # persist setting without launching");
             return 2;
         }
 

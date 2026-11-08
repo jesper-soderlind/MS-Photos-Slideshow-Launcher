@@ -1,4 +1,4 @@
-# PhotosSlideshow
+# MS Photos Slideshow Launcher
 
 Launch Microsoft Photos in slideshow mode for a folder or an explicit file
 list, with a configurable per-image duration and slideshow settings (loop /
